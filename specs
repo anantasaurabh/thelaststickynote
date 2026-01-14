@@ -1,0 +1,230 @@
+PRD: The Last Sticky Note App (MVP)
+1. Executive Summary
+Goal: Build a "no-friction" collaborative sticky note tool. Users can create a board instantly, share the URL, and collaborate in real-time. Target Audience: Teams or individuals needing a quick, disposable brainstorming space. Key Differentiator: No Login. No Signup. Speed above everything.
+
+2. User Flow
+Landing Page: User sees a big button: "Create New Board".
+
+Board Creation: Clicking the button generates a random 10-character ID (e.g., abc-123-xyz), creates the board in the database, and redirects the browser to /board/abc-123-xyz.
+
+Persistence: The app saves this board ID and name to the browser's localStorage so the user can find it later in a "Recent Boards" list on the homepage.
+
+Sticky Note Interaction: User clicks "Add Note." A card appears. They can edit title, descriptions, add todo items, tag it, and change color.
+
+Sharing: User copies the URL from the browser bar and sends it to a friend. The friend opens it and sees the same board.
+
+3. Technical Stack (Mandatory)
+Frontend: React (Vite) + TypeScript
+
+Styling: Tailwind CSS (Utility classes) + Lucide React (Icons)
+
+State Management: Zustand (For managing filters and local state)
+
+Drag & Drop: @dnd-kit/core & @dnd-kit/sortable
+
+Routing: react-router-dom
+
+Database: Supabase (PostgreSQL)
+
+ID Generation: nanoid (Library to create unique URL slugs)
+
+4. Database Schema (Supabase)
+Instruction for Developer: Create these two tables in the Supabase Dashboard.
+
+Table 1: boards
+id (Primary Key): text (This will be our custom slug, e.g., "x9z-2m1")
+
+created_at: timestamp (Default: now())
+
+Table 2: notes
+id (Primary Key): uuid (Default: uuid_generate_v4())
+
+board_id: text (Foreign Key -> references boards.id)
+
+title: text
+
+short_desc: text (Max 100 chars)
+
+long_desc: text (Unlimited)
+
+color: text (Stores the CSS class or hex code)
+
+tags: text[] (Array of strings)
+
+position: integer (For ordering cards 1, 2, 3...)
+
+todos: jsonb
+
+Data Structure for JSONB:
+
+JSON
+
+[
+  { "id": "1", "text": "Buy Milk", "done": false },
+  { "id": "2", "text": "Call Client", "done": true }
+]
+5. Functional Requirements (The "Tickets")
+Feature A: The Board Logic
+Create Board:
+
+On button click, use nanoid to generate a string.
+
+Insert into Supabase boards table.
+
+Save to localStorage key recent_boards.
+
+Redirect to /board/:id.
+
+Load Board:
+
+On /board/:id load, fetch all notes where board_id === :id.
+
+Sort them by position ascending.
+
+Feature B: The Sticky Note Component
+Visuals: Must look like a square/rectangular card.
+
+Fields:
+
+Title: Text input, bold.
+
+Short Desc: Text area, visible on card.
+
+Long Desc: Hidden behind a "View Details" or "Expand" icon button (opens a Modal).
+
+Tags: Input that creates "chips" (e.g., "Urgent", "Bug").
+
+Color Picker: A dropdown or row of circles to select the card background color.
+
+Feature C: The "Mini-Trello" Todo List
+Inside the Sticky Note, render the todos JSON array.
+
+Display a checkbox and text for each item.
+
+Interaction: Clicking the checkbox immediately updates the specific item's done status in the JSON and saves to Supabase.
+
+Feature D: Drag and Drop
+Use @dnd-kit.
+
+Users can drag notes to reorder them within the grid.
+
+On Drop End: Calculate the new indices and update the position integer in Supabase for the affected notes.
+
+Feature E: Filtering (Client-Side)
+UI: A toolbar at the top of the board.
+
+Color Filter: "Show only [Pink] notes".
+
+Tag Filter: "Show notes with tag [Bug]".
+
+Logic: Do not query the database again. Use JavaScript array.filter() on the data you already fetched.
+
+6. Design System
+The "Pastel 12" Palette
+Instruction: Add these to your tailwind.config.js or as a constant object.
+
+Red: #fca5a5
+
+Orange: #fdba74
+
+Amber: #fcd34d
+
+Yellow: #fde047
+
+Lime: #bef264
+
+Green: #86efac
+
+Emerald: #6ee7b7
+
+Teal: #5eead4
+
+Cyan: #67e8f9
+
+Sky: #7dd3fc
+
+Indigo: #a5b4fc
+
+Violet: #c4b5fd
+
+7. Security Rules (Row Level Security)
+Since we have no users, we use "Implicit Security".
+
+Policy 1 (Boards): Enable Read/Insert for Public (Anon).
+
+Policy 2 (Notes): Enable ALL (Select, Insert, Update, Delete) for Public.
+
+Note for Junior Dev: In the Supabase dashboard, go to "Authentication" -> "Policies" and create a policy that allows true for all operations. This is okay for an MVP.
+
+8. Development Roadmap (Suggested Order)
+Setup: Initialize React, Tailwind, and connect Supabase Client.
+
+Database: Create the tables in Supabase.
+
+Routing: Create the "Landing Page" and the empty "Board Page".
+
+CRUD: Make the Sticky Note component and ensure you can add/edit it in the database.
+
+Todos: Implement the checklist logic inside the note.
+
+Drag & Drop: Add the drag library last (it is the hardest part to debug).
+
+Polish: Add the pastel colors and local storage history.
+
+
+
+9. Database schema to be used with supabase.
+-- 1. Enable UUID extension (standard for Supabase)
+create extension if not exists "uuid-ossp";
+
+-- 2. Create the BOARDS table
+-- The 'id' is text because we will send the generated slug (e.g., "blue-zebra-99") from the frontend
+create table public.boards (
+  id text primary key, 
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 3. Create the NOTES table
+create table public.notes (
+  id uuid default gen_random_uuid() primary key,
+  board_id text references public.boards(id) on delete cascade not null,
+  title text not null,
+  short_desc text default '',
+  long_desc text default '',
+  color text default 'bg-yellow-200', -- Default to a Tailwind class or Hex
+  tags text[] default '{}',           -- Array of strings
+  todos jsonb default '[]'::jsonb,    -- The JSON checklist
+  position integer default 0,         -- For drag and drop order
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 4. Create an Index for speed
+-- This makes loading a specific board much faster
+create index notes_board_id_idx on public.notes(board_id);
+
+-- 5. Enable Realtime (Optional but recommended)
+-- This allows multiple users to see cards move instantly without refreshing
+alter publication supabase_realtime add table public.boards;
+alter publication supabase_realtime add table public.notes;
+
+-- 6. SECURITY SETTINGS (Row Level Security)
+-- Enable RLS on tables
+alter table public.boards enable row level security;
+alter table public.notes enable row level security;
+
+-- Create Policies to allow ANYONE to read/write if they have the Board ID (The URL)
+-- NOTE: We use "FOR ALL" to cover Select, Insert, Update, and Delete
+
+-- Policy for Boards
+create policy "Enable public access to boards"
+on public.boards
+for all
+using (true)
+with check (true);
+
+-- Policy for Notes
+create policy "Enable public access to notes"
+on public.notes
+for all
+using (true)
+with check (true);
