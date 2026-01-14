@@ -138,11 +138,19 @@ export default function StickyNote({ note, onUpdate, onDelete }: StickyNoteProps
             </>
           ) : (
             <>
-              <h3 className="font-bold text-lg text-gray-800 break-words">
+              <h3 
+                onClick={() => setIsEditing(true)}
+                className="font-bold text-lg text-gray-800 break-words cursor-pointer hover:text-purple-600 transition"
+                title="Click to edit"
+              >
                 {note.title}
               </h3>
               {note.short_desc && (
-                <p className="text-sm text-gray-700 break-words">
+                <p 
+                  onClick={() => setIsEditing(true)}
+                  className="text-sm text-gray-700 break-words cursor-pointer hover:text-purple-600 transition"
+                  title="Click to edit"
+                >
                   {note.short_desc}
                 </p>
               )}
