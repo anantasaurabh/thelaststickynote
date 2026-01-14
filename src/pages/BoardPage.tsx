@@ -377,17 +377,17 @@ export default function BoardPage() {
                   {boardName}
                 </button>
               )}
-            </div>
 
-            <div className="flex items-center gap-2">
+              <div className="h-6 w-px bg-gray-300 hidden sm:block" />
+
               {/* View Toggle */}
-              <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+              <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`flex items-center gap-1 px-3 py-2 text-sm transition ${
                     viewMode === 'grid'
-                      ? 'bg-purple-500 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                      ? 'bg-white text-gray-900 shadow-sm font-semibold'
+                      : 'bg-transparent text-gray-600 hover:text-gray-900'
                   }`}
                   title="Grid view"
                 >
@@ -398,8 +398,8 @@ export default function BoardPage() {
                   onClick={() => setViewMode('kanban')}
                   className={`flex items-center gap-1 px-3 py-2 text-sm transition ${
                     viewMode === 'kanban'
-                      ? 'bg-purple-500 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                      ? 'bg-white text-gray-900 shadow-sm font-semibold'
+                      : 'bg-transparent text-gray-600 hover:text-gray-900'
                   }`}
                   title="Kanban view"
                 >
@@ -407,9 +407,9 @@ export default function BoardPage() {
                   <span className="hidden md:inline">Kanban</span>
                 </button>
               </div>
+            </div>
 
-              <div className="h-6 w-px bg-gray-300" />
-
+            <div className="flex items-center gap-2">
               <button
                 onClick={exportNotes}
                 className="flex items-center gap-2 px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition"
