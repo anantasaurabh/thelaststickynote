@@ -123,6 +123,9 @@ export default function BoardPage() {
 
   const deleteNote = async (noteId: string) => {
     try {
+      // Optimistically update UI
+      setNotes(prevNotes => prevNotes.filter(note => note.id !== noteId))
+
       const { error } = await supabase
         .from('notes')
         .delete()
@@ -131,6 +134,8 @@ export default function BoardPage() {
       if (error) throw error
     } catch (error) {
       console.error('Error deleting note:', error)
+      // Reload notes on error to sync with database
+      loadNotes()
     }
   }
 
