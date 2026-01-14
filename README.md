@@ -67,7 +67,8 @@ create extension if not exists "uuid-ossp";
 
 -- 2. Create the BOARDS table
 create table public.boards (
-  id text primary key, 
+  id text primary key,
+  name text default 'Untitled Board',
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

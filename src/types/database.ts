@@ -4,14 +4,17 @@ export interface Database {
       boards: {
         Row: {
           id: string
+          name: string
           created_at: string
         }
         Insert: {
           id: string
+          name?: string
           created_at?: string
         }
         Update: {
           id?: string
+          name?: string
           created_at?: string
         }
       }
@@ -78,6 +81,7 @@ export interface Note {
 
 export interface Board {
   id: string
+  name: string
   created_at: string
 }
 

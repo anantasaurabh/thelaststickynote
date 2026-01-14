@@ -29,6 +29,9 @@ export default function BoardPage() {
   const [notes, setNotes] = useState<Note[]>([])
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [boardName, setBoardName] = useState('Untitled Board')
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [editName, setEditName] = useState('')
   const { selectedColor, selectedTag } = useFilterStore()
 
   const sensors = useSensors(
@@ -41,8 +44,8 @@ export default function BoardPage() {
   useEffect(() => {
     if (!id) return
 
-    // Add to recent boards
-    addRecentBoard(id)
+    // Load board details
+    loadBoard()
 
     // Load notes
     loadNotes()
@@ -68,6 +71,28 @@ export default function BoardPage() {
       subscription.unsubscribe()
     }
   }, [id])
+
+  const loadBoard = async () => {
+    if (!id) return
+
+    try {
+      const { data, error } = await supabase
+        .from('boards')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) throw error
+      
+      const name = data?.name || 'Untitled Board'
+      setBoardName(name)
+      
+      // Add to recent boards with name
+      addRecentBoard(id, name)
+    } catch (error) {
+      console.error('Error loading board:', error)
+    }
+  }
 
   const loadNotes = async () => {
     if (!id) return
@@ -139,6 +164,35 @@ export default function BoardPage() {
     }
   }
 
+  const updateBoardName = async () => {
+    if (!id || !editName.trim()) {
+      setIsEditingName(false)
+      return
+    }
+
+    try {
+      const newName = editName.trim()
+      const { error } = await supabase
+        .from('boards')
+        .update({ name: newName })
+        .eq('id', id)
+
+      if (error) throw error
+
+      setBoardName(newName)
+      addRecentBoard(id, newName)
+      setIsEditingName(false)
+    } catch (error) {
+      console.error('Error updating board name:', error)
+      setIsEditingName(false)
+    }
+  }
+
+  const startEditingName = () => {
+    setEditName(boardName)
+    setIsEditingName(true)
+  }
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
 
@@ -199,13 +253,40 @@ export default function BoardPage() {
       <div className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
-            >
-              <Home className="w-5 h-5" />
-              <span className="hidden sm:inline">Home</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+              >
+                <Home className="w-5 h-5" />
+                <span className="hidden sm:inline">Home</span>
+              </button>
+              
+              <div className="h-6 w-px bg-gray-300 hidden sm:block" />
+              
+              {isEditingName ? (
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  onBlur={updateBoardName}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') updateBoardName()
+                    if (e.key === 'Escape') setIsEditingName(false)
+                  }}
+                  className="px-2 py-1 border border-purple-500 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg font-semibold"
+                  autoFocus
+                />
+              ) : (
+                <button
+                  onClick={startEditingName}
+                  className="text-lg font-semibold text-gray-800 hover:text-purple-600 transition px-2 py-1 rounded hover:bg-purple-50"
+                  title="Click to rename board"
+                >
+                  {boardName}
+                </button>
+              )}
+            </div>
 
             <div className="flex items-center gap-4">
               <button
