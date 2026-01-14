@@ -36,12 +36,12 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-yellow-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-4">
-            <StickyNote className="w-16 h-16 text-purple-600" />
+            <StickyNote className="w-16 h-16 text-amber-400" />
           </div>
           <h1 className="text-5xl font-bold text-gray-800 mb-4">
             The Last Sticky Note
@@ -56,7 +56,7 @@ export default function LandingPage() {
           <button
             onClick={createNewBoard}
             disabled={isCreating}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-12 rounded-full text-xl shadow-lg transform transition hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-gradient-to-r from-yellow-300 via-amber-300 to-orange-300 hover:from-yellow-400 hover:via-amber-400 hover:to-orange-400 text-gray-800 font-bold py-4 px-12 rounded-full text-xl shadow-lg transform transition hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed border border-amber-400"
           >
             {isCreating ? 'Creating...' : 'Create New Board'}
           </button>
@@ -101,6 +101,15 @@ export default function LandingPage() {
         <div className="text-center mt-12 text-gray-600">
           <p className="text-sm">
             Share your board URL with anyone to collaborate in real-time
+          </p>
+        </div>
+
+        {/* Security Warning */}
+        <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className="text-xs text-amber-800 text-center">
+            ⚠️ <strong>Note:</strong> This tool is designed for fast collaboration, not security. 
+            Do not put sensitive information on your boards. 
+            Anyone with the link has full access to view, update, or delete the board.
           </p>
         </div>
       </div>
