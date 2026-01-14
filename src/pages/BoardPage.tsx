@@ -305,14 +305,6 @@ export default function BoardPage() {
                   </>
                 )}
               </button>
-
-              <button
-                onClick={addNote}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition"
-              >
-                <Plus className="w-5 h-5" />
-                <span className="hidden sm:inline">Add Note</span>
-              </button>
             </div>
           </div>
         </div>
@@ -323,13 +315,17 @@ export default function BoardPage() {
 
       {/* Notes Grid */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {filteredNotes.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-xl text-gray-600 mb-4">
-              {notes.length === 0
-                ? 'No notes yet. Click "Add Note" to get started!'
-                : 'No notes match the current filters.'}
-            </p>
+        {notes.length === 0 && filteredNotes.length === 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <button
+              onClick={addNote}
+              className="border-4 border-dashed border-gray-300 rounded-lg p-8 hover:border-purple-400 hover:bg-purple-50 transition-colors flex flex-col items-center justify-center gap-3 min-h-[250px] group"
+            >
+              <Plus className="w-12 h-12 text-gray-400 group-hover:text-purple-500 transition" />
+              <span className="text-lg font-medium text-gray-600 group-hover:text-purple-600 transition">
+                Add Note
+              </span>
+            </button>
           </div>
         ) : (
           <DndContext
@@ -350,6 +346,17 @@ export default function BoardPage() {
                     onDelete={deleteNote}
                   />
                 ))}
+                
+                {/* Add Note Placeholder */}
+                <button
+                  onClick={addNote}
+                  className="border-4 border-dashed border-gray-300 rounded-lg p-8 hover:border-purple-400 hover:bg-purple-50 transition-colors flex flex-col items-center justify-center gap-3 min-h-[250px] group"
+                >
+                  <Plus className="w-12 h-12 text-gray-400 group-hover:text-purple-500 transition" />
+                  <span className="text-lg font-medium text-gray-600 group-hover:text-purple-600 transition">
+                    Add Note
+                  </span>
+                </button>
               </div>
             </SortableContext>
           </DndContext>
