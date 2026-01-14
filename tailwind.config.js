@@ -38,5 +38,6 @@ export default {
     'bg-pastel-sky',
     'bg-pastel-indigo',
     'bg-pastel-violet',
+    'bg-rose-200',
   ],
 }

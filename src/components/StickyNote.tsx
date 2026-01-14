@@ -172,8 +172,10 @@ export default function StickyNote({ note, onUpdate, onDelete }: StickyNoteProps
 
           {/* Todos */}
           <TodoList todos={note.todos} onChange={handleTodosChange} />
+        </div>
 
-          {/* Color Picker */}
+        {/* Color Picker - Bottom Right */}
+        <div className="absolute bottom-3 right-3">
           <ColorPicker
             currentColor={note.color}
             onChange={handleColorChange}
