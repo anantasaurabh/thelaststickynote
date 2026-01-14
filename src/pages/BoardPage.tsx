@@ -6,7 +6,7 @@ import type { Note } from '@/types/database'
 import StickyNote from '@/components/StickyNote'
 import FilterToolbar from '@/components/FilterToolbar'
 import { useFilterStore } from '@/store/filterStore'
-import { Plus, Home, Copy, Check } from 'lucide-react'
+import { Plus, Home, Copy, Check, Download, Upload } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -229,6 +229,78 @@ export default function BoardPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const exportNotes = () => {
+    if (!id || notes.length === 0) {
+      alert('No notes to export!')
+      return
+    }
+
+    const exportData = {
+      boardName: boardName,
+      exportDate: new Date().toISOString(),
+      notes: notes.map(note => ({
+        title: note.title,
+        short_desc: note.short_desc,
+        long_desc: note.long_desc,
+        color: note.color,
+        tags: note.tags,
+        todos: note.todos,
+      }))
+    }
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${boardName.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
+  const importNotes = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json'
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+
+      try {
+        const text = await file.text()
+        const importData = JSON.parse(text)
+
+        if (!importData.notes || !Array.isArray(importData.notes)) {
+          alert('Invalid JSON format!')
+          return
+        }
+
+        const maxPosition = Math.max(...notes.map(n => n.position), -1)
+
+        for (let i = 0; i < importData.notes.length; i++) {
+          const note = importData.notes[i]
+          await supabase.from('notes').insert({
+            board_id: id!,
+            title: note.title || 'Imported Note',
+            short_desc: note.short_desc || '',
+            long_desc: note.long_desc || '',
+            color: note.color || 'bg-pastel-yellow',
+            tags: note.tags || [],
+            todos: note.todos || [],
+            position: maxPosition + i + 1,
+          })
+        }
+
+        alert(`Successfully imported ${importData.notes.length} note(s)!`)
+      } catch (error) {
+        console.error('Error importing notes:', error)
+        alert('Failed to import notes. Please check the file format.')
+      }
+    }
+    input.click()
+  }
+
   // Filter notes
   const filteredNotes = notes.filter(note => {
     if (selectedColor && note.color !== selectedColor) return false
@@ -288,20 +360,38 @@ export default function BoardPage() {
               )}
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={exportNotes}
+                className="flex items-center gap-2 px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition"
+                title="Export notes as JSON"
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden md:inline text-sm">Export</span>
+              </button>
+
+              <button
+                onClick={importNotes}
+                className="flex items-center gap-2 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition"
+                title="Import notes from JSON"
+              >
+                <Upload className="w-4 h-4" />
+                <span className="hidden md:inline text-sm">Import</span>
+              </button>
+
               <button
                 onClick={copyBoardUrl}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+                className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
               >
                 {copied ? (
                   <>
                     <Check className="w-4 h-4" />
-                    <span className="hidden sm:inline">Copied!</span>
+                    <span className="hidden sm:inline text-sm">Copied!</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-4 h-4" />
-                    <span className="hidden sm:inline">Share URL</span>
+                    <span className="hidden sm:inline text-sm">Share</span>
                   </>
                 )}
               </button>

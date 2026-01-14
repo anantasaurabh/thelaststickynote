@@ -112,6 +112,12 @@ export default function LandingPage() {
             Anyone with the link has full access to view, update, or delete the board.
           </p>
         </div>
+
+        {/* Tip */}
+        <p className="mt-2 text-xs text-gray-600 text-center">
+            💡 <strong>Tip:</strong> Use the Export feature to backup your notes as JSON files.
+          </p>
+        
       </div>
     </div>
   )
