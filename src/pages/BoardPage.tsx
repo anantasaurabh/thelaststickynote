@@ -3,10 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { addRecentBoard } from '@/lib/localStorage'
 import type { Note } from '@/types/database'
+import { NOTE_STATUSES, type NoteStatus } from '@/types/database'
 import StickyNote from '@/components/StickyNote'
 import FilterToolbar from '@/components/FilterToolbar'
+import KanbanView from '@/components/KanbanView'
 import { useFilterStore } from '@/store/filterStore'
-import { Plus, Home, Copy, Check, Download, Upload } from 'lucide-react'
+import { Plus, Home, Copy, Check, Download, Upload, LayoutGrid, Columns } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -32,6 +34,7 @@ export default function BoardPage() {
   const [boardName, setBoardName] = useState('Untitled Board')
   const [isEditingName, setIsEditingName] = useState(false)
   const [editName, setEditName] = useState('')
+  const [viewMode, setViewMode] = useState<'grid' | 'kanban'>('grid')
   const { selectedColor, selectedTag } = useFilterStore()
 
   const sensors = useSensors(
@@ -125,6 +128,7 @@ export default function BoardPage() {
           board_id: id,
           title: 'New Note',
           position: maxPosition + 1,
+          status: 'new',
         })
 
       if (error) throw error
@@ -196,7 +200,20 @@ export default function BoardPage() {
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
 
-    if (!over || active.id === over.id) return
+    if (!over) return
+
+    // Check if dropped over a kanban column
+    const overId = over.id.toString()
+    if (overId.startsWith('column-')) {
+      const newStatus = overId.replace('column-', '') as NoteStatus
+      const noteId = active.id.toString()
+      
+      // Update status
+      await updateNote(noteId, { status: newStatus })
+      return
+    }
+
+    if (active.id === over.id) return
 
     const oldIndex = notes.findIndex(n => n.id === active.id)
     const newIndex = notes.findIndex(n => n.id === over.id)
@@ -245,6 +262,7 @@ export default function BoardPage() {
         color: note.color,
         tags: note.tags,
         todos: note.todos,
+        status: note.status,
       }))
     }
 
@@ -288,6 +306,7 @@ export default function BoardPage() {
             color: note.color || 'bg-pastel-yellow',
             tags: note.tags || [],
             todos: note.todos || [],
+            status: note.status || 'new',
             position: maxPosition + i + 1,
           })
         }
@@ -361,6 +380,36 @@ export default function BoardPage() {
             </div>
 
             <div className="flex items-center gap-2">
+              {/* View Toggle */}
+              <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`flex items-center gap-1 px-3 py-2 text-sm transition ${
+                    viewMode === 'grid'
+                      ? 'bg-purple-500 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                  title="Grid view"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                  <span className="hidden md:inline">Grid</span>
+                </button>
+                <button
+                  onClick={() => setViewMode('kanban')}
+                  className={`flex items-center gap-1 px-3 py-2 text-sm transition ${
+                    viewMode === 'kanban'
+                      ? 'bg-purple-500 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                  title="Kanban view"
+                >
+                  <Columns className="w-4 h-4" />
+                  <span className="hidden md:inline">Kanban</span>
+                </button>
+              </div>
+
+              <div className="h-6 w-px bg-gray-300" />
+
               <button
                 onClick={exportNotes}
                 className="flex items-center gap-2 px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition"
@@ -400,10 +449,10 @@ export default function BoardPage() {
         </div>
       </div>
 
-      {/* Filter Toolbar */}
-      <FilterToolbar allTags={allTags} />
+      {/* Filter Toolbar - Only show in grid view */}
+      {viewMode === 'grid' && <FilterToolbar allTags={allTags} />}
 
-      {/* Notes Grid */}
+      {/* Notes View */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         {notes.length === 0 && filteredNotes.length === 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -423,32 +472,41 @@ export default function BoardPage() {
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-            <SortableContext
-              items={filteredNotes.map(n => n.id)}
-              strategy={rectSortingStrategy}
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredNotes.map(note => (
-                  <StickyNote
-                    key={note.id}
-                    note={note}
-                    onUpdate={updateNote}
-                    onDelete={deleteNote}
-                  />
-                ))}
-                
-                {/* Add Note Placeholder */}
-                <button
-                  onClick={addNote}
-                  className="border-4 border-dashed border-gray-300 rounded-lg p-8 hover:border-purple-400 hover:bg-purple-50 transition-colors flex flex-col items-center justify-center gap-3 min-h-[250px] group"
-                >
-                  <Plus className="w-12 h-12 text-gray-400 group-hover:text-purple-500 transition" />
-                  <span className="text-lg font-medium text-gray-600 group-hover:text-purple-600 transition">
-                    Add Note
-                  </span>
-                </button>
-              </div>
-            </SortableContext>
+            {viewMode === 'kanban' ? (
+              <KanbanView
+                notes={filteredNotes}
+                onUpdate={updateNote}
+                onDelete={deleteNote}
+                onAddNote={addNote}
+              />
+            ) : (
+              <SortableContext
+                items={filteredNotes.map(n => n.id)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {filteredNotes.map(note => (
+                    <StickyNote
+                      key={note.id}
+                      note={note}
+                      onUpdate={updateNote}
+                      onDelete={deleteNote}
+                    />
+                  ))}
+                  
+                  {/* Add Note Placeholder */}
+                  <button
+                    onClick={addNote}
+                    className="border-4 border-dashed border-gray-300 rounded-lg p-8 hover:border-purple-400 hover:bg-purple-50 transition-colors flex flex-col items-center justify-center gap-3 min-h-[250px] group"
+                  >
+                    <Plus className="w-12 h-12 text-gray-400 group-hover:text-purple-500 transition" />
+                    <span className="text-lg font-medium text-gray-600 group-hover:text-purple-600 transition">
+                      Add Note
+                    </span>
+                  </button>
+                </div>
+              </SortableContext>
+            )}
           </DndContext>
         )}
       </div>

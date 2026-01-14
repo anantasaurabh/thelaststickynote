@@ -83,6 +83,7 @@ create table public.notes (
   tags text[] default '{}',
   todos jsonb default '[]'::jsonb,
   position integer default 0,
+  status text default 'new',
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

@@ -29,6 +29,7 @@ export interface Database {
           tags: string[]
           todos: TodoItem[]
           position: number
+          status: string
           created_at: string
         }
         Insert: {
@@ -41,6 +42,7 @@ export interface Database {
           tags?: string[]
           todos?: TodoItem[]
           position?: number
+          status?: string
           created_at?: string
         }
         Update: {
@@ -53,6 +55,7 @@ export interface Database {
           tags?: string[]
           todos?: TodoItem[]
           position?: number
+          status?: string
           created_at?: string
         }
       }
@@ -76,8 +79,18 @@ export interface Note {
   tags: string[]
   todos: TodoItem[]
   position: number
+  status: string
   created_at: string
 }
+
+export type NoteStatus = 'new' | 'todo' | 'ongoing' | 'closed'
+
+export const NOTE_STATUSES: { value: NoteStatus; label: string }[] = [
+  { value: 'new', label: 'New' },
+  { value: 'todo', label: 'Todo' },
+  { value: 'ongoing', label: 'Ongoing' },
+  { value: 'closed', label: 'Closed' },
+]
 
 export interface Board {
   id: string
