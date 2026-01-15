@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import type { Note, TodoItem } from '@/types/database'
-import { NOTE_STATUSES } from '@/types/database'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Trash2, GripVertical, Edit2, X, Check } from 'lucide-react'
@@ -64,10 +63,6 @@ export default function StickyNote({ note, onUpdate, onDelete }: StickyNoteProps
 
   const handleLongDescChange = (longDesc: string) => {
     onUpdate(note.id, { long_desc: longDesc })
-  }
-
-  const handleStatusChange = (status: string) => {
-    onUpdate(note.id, { status })
   }
 
   return (

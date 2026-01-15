@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { getRecentBoards, removeRecentBoard } from '@/lib/localStorage'
 import { StickyNote, Trash2 } from 'lucide-react'
 import { useState } from 'react'
+import type { Database } from '@/types/database'
 
 export default function LandingPage() {
   const navigate = useNavigate()
@@ -15,9 +16,10 @@ export default function LandingPage() {
       setIsCreating(true)
       const boardId = nanoid(10)
       
+      const boardInsert: Database['public']['Tables']['boards']['Insert'] = { id: boardId }
       const { error } = await supabase
         .from('boards')
-        .insert({ id: boardId })
+        .insert(boardInsert)
       
       if (error) throw error
       

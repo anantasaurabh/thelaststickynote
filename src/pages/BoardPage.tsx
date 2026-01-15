@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { addRecentBoard } from '@/lib/localStorage'
-import type { Note } from '@/types/database'
-import { NOTE_STATUSES, type NoteStatus } from '@/types/database'
+import type { Note, Database } from '@/types/database'
+import type { NoteStatus } from '@/types/database'
 import StickyNote from '@/components/StickyNote'
 import FilterToolbar from '@/components/FilterToolbar'
 import KanbanView from '@/components/KanbanView'
@@ -87,7 +87,7 @@ export default function BoardPage() {
 
       if (error) throw error
       
-      const name = data?.name || 'Untitled Board'
+      const name = (data as Database['public']['Tables']['boards']['Row']).name || 'Untitled Board'
       setBoardName(name)
       
       // Add to recent boards with name
@@ -122,14 +122,16 @@ export default function BoardPage() {
     try {
       const maxPosition = Math.max(...notes.map(n => n.position), -1)
       
+      const newNote: Database['public']['Tables']['notes']['Insert'] = {
+        board_id: id,
+        title: 'New Note',
+        position: maxPosition + 1,
+        status: 'new',
+      }
+      
       const { error } = await supabase
         .from('notes')
-        .insert({
-          board_id: id,
-          title: 'New Note',
-          position: maxPosition + 1,
-          status: 'new',
-        })
+        .insert(newNote)
 
       if (error) throw error
     } catch (error) {
@@ -139,9 +141,10 @@ export default function BoardPage() {
 
   const updateNote = async (noteId: string, updates: Partial<Note>) => {
     try {
+      const noteUpdate: Database['public']['Tables']['notes']['Update'] = updates
       const { error } = await supabase
         .from('notes')
-        .update(updates)
+        .update(noteUpdate)
         .eq('id', noteId)
 
       if (error) throw error
@@ -176,9 +179,10 @@ export default function BoardPage() {
 
     try {
       const newName = editName.trim()
+      const boardUpdate: Database['public']['Tables']['boards']['Update'] = { name: newName }
       const { error } = await supabase
         .from('boards')
-        .update({ name: newName })
+        .update(boardUpdate)
         .eq('id', id)
 
       if (error) throw error
@@ -229,9 +233,10 @@ export default function BoardPage() {
       }))
 
       for (const update of updates) {
+        const positionUpdate: Database['public']['Tables']['notes']['Update'] = { position: update.position }
         await supabase
           .from('notes')
-          .update({ position: update.position })
+          .update(positionUpdate)
           .eq('id', update.id)
       }
     } catch (error) {
@@ -298,7 +303,7 @@ export default function BoardPage() {
 
         for (let i = 0; i < importData.notes.length; i++) {
           const note = importData.notes[i]
-          await supabase.from('notes').insert({
+          const newNote: Database['public']['Tables']['notes']['Insert'] = {
             board_id: id!,
             title: note.title || 'Imported Note',
             short_desc: note.short_desc || '',
@@ -308,7 +313,8 @@ export default function BoardPage() {
             todos: note.todos || [],
             status: note.status || 'new',
             position: maxPosition + i + 1,
-          })
+          }
+          await supabase.from('notes').insert(newNote)
         }
 
         alert(`Successfully imported ${importData.notes.length} note(s)!`)
