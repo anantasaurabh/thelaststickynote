@@ -17,17 +17,16 @@ export default function FilterToolbar({ allTags }: FilterToolbarProps) {
 
   return (
     <div className="bg-white border-b shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-3">
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-2 text-gray-700">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
+        <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+          <div className="flex items-center gap-1 sm:gap-2 text-gray-700 flex-shrink-0">
             <Filter className="w-4 h-4" />
-            <span className="font-medium">Filters:</span>
+            <span className="font-medium text-sm sm:text-base">Filters:</span>
           </div>
 
           {/* Color Filter */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Color:</span>
-            <div className="flex gap-1.5">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-1 min-w-0">
+            <div className="flex gap-1 sm:gap-1.5">
               {COLORS.map(color => (
                 <button
                   key={color.class}
@@ -38,11 +37,11 @@ export default function FilterToolbar({ allTags }: FilterToolbarProps) {
                     borderColor: getColorBorder(color),
                     borderWidth: '1px'
                   }}
-                  className={`w-7 h-7 rounded-full ${color.class} ${
+                  className={`w-7 h-7 sm:w-6 sm:h-6 rounded-full ${color.class} ${
                     selectedColor === color.class
                       ? 'scale-110 ring-2 ring-offset-1'
                       : ''
-                  } hover:scale-110 transition-all`}
+                  } hover:scale-110 transition-all flex-shrink-0`}
                   title={color.name}
                 />
               ))}
@@ -51,8 +50,8 @@ export default function FilterToolbar({ allTags }: FilterToolbarProps) {
 
           {/* Tag Filter */}
           {allTags.length > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Tag:</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs sm:text-sm text-gray-600 flex-shrink-0">Tag:</span>
               <div className="flex gap-1.5 flex-wrap">
                 {allTags.map(tag => (
                   <button
@@ -60,7 +59,7 @@ export default function FilterToolbar({ allTags }: FilterToolbarProps) {
                     onClick={() =>
                       setTagFilter(selectedTag === tag ? null : tag)
                     }
-                    className={`px-3 py-1 rounded-full text-xs border ${
+                    className={`px-2 sm:px-3 py-1 rounded-full text-xs border ${
                       selectedTag === tag
                         ? 'bg-purple-500 text-white border-purple-600'
                         : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200 hover:border-gray-400'
@@ -77,10 +76,11 @@ export default function FilterToolbar({ allTags }: FilterToolbarProps) {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-full border border-red-300 hover:border-red-400 transition"
+              className="flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-red-600 hover:bg-red-50 rounded-full border border-red-300 hover:border-red-400 transition flex-shrink-0"
             >
-              <X className="w-4 h-4" />
-              Clear Filters
+              <X className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Clear Filters</span>
+              <span className="sm:hidden">Clear</span>
             </button>
           )}
         </div>

@@ -349,12 +349,13 @@ export default function BoardPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4">
+          <div className="flex items-center justify-between gap-1 sm:gap-3">
+            <div className="flex items-center gap-1 sm:gap-3 flex-1 min-w-0">
               <button
                 onClick={() => navigate('/')}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                className="flex items-center gap-1 text-gray-600 hover:text-gray-900 flex-shrink-0"
+                title="Home"
               >
                 <Home className="w-5 h-5" />
                 <span className="hidden sm:inline">Home</span>
@@ -362,7 +363,8 @@ export default function BoardPage() {
               
               <button
                 onClick={() => navigate('/about')}
-                className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition"
+                className="flex items-center gap-1 text-gray-600 hover:text-purple-600 transition flex-shrink-0"
+                title="About"
               >
                 <Info className="w-5 h-5" />
                 <span className="hidden sm:inline">About</span>
@@ -380,13 +382,13 @@ export default function BoardPage() {
                     if (e.key === 'Enter') updateBoardName()
                     if (e.key === 'Escape') setIsEditingName(false)
                   }}
-                  className="px-2 py-1 border border-purple-500 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg font-semibold"
+                  className="px-2 py-1 border border-purple-500 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 text-base sm:text-lg font-semibold min-w-0"
                   autoFocus
                 />
               ) : (
                 <button
                   onClick={startEditingName}
-                  className="text-lg font-semibold text-gray-800 hover:text-purple-600 transition px-2 py-1 rounded hover:bg-purple-50"
+                  className="text-sm sm:text-lg font-semibold text-gray-800 hover:text-purple-600 transition px-1 sm:px-2 py-1 rounded hover:bg-purple-50 truncate min-w-0"
                   title="Click to rename board"
                 >
                   {boardName}
@@ -396,10 +398,10 @@ export default function BoardPage() {
               <div className="h-6 w-px bg-gray-300 hidden sm:block" />
 
               {/* View Toggle */}
-              <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
+              <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`flex items-center gap-1 px-3 py-2 text-sm transition ${
+                  className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 text-sm transition ${
                     viewMode === 'grid'
                       ? 'bg-white text-gray-900 shadow-sm font-semibold'
                       : 'bg-transparent text-gray-600 hover:text-gray-900'
@@ -411,7 +413,7 @@ export default function BoardPage() {
                 </button>
                 <button
                   onClick={() => setViewMode('kanban')}
-                  className={`flex items-center gap-1 px-3 py-2 text-sm transition ${
+                  className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 text-sm transition ${
                     viewMode === 'kanban'
                       ? 'bg-white text-gray-900 shadow-sm font-semibold'
                       : 'bg-transparent text-gray-600 hover:text-gray-900'
@@ -424,10 +426,10 @@ export default function BoardPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               <button
                 onClick={exportNotes}
-                className="flex items-center gap-2 px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition"
+                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition"
                 title="Export notes as JSON"
               >
                 <Download className="w-4 h-4" />
@@ -436,7 +438,7 @@ export default function BoardPage() {
 
               <button
                 onClick={importNotes}
-                className="flex items-center gap-2 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition"
+                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition"
                 title="Import notes from JSON"
               >
                 <Upload className="w-4 h-4" />
@@ -445,7 +447,8 @@ export default function BoardPage() {
 
               <button
                 onClick={copyBoardUrl}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+                title={copied ? "Link copied!" : "Share board"}
               >
                 {copied ? (
                   <>

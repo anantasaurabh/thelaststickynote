@@ -117,7 +117,7 @@ export default function StickyNote({ note, onUpdate, onDelete }: StickyNoteProps
         </div>
 
         {/* Content */}
-        <div className="mt-8 space-y-3">
+        <div className="mt-8 space-y-3 pb-12">
           {isEditing ? (
             <>
               <input
