@@ -8,7 +8,8 @@ import StickyNote from '@/components/StickyNote'
 import FilterToolbar from '@/components/FilterToolbar'
 import KanbanView from '@/components/KanbanView'
 import { useFilterStore } from '@/store/filterStore'
-import { Plus, Home, Copy, Check, Download, Upload, LayoutGrid, Columns } from 'lucide-react'
+import { Plus, Home, Copy, Check, Download, Upload, LayoutGrid, Columns, Info } from 'lucide-react'
+import Footer from '@/components/Footer'
 import {
   DndContext,
   closestCenter,
@@ -345,7 +346,7 @@ export default function BoardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -357,6 +358,14 @@ export default function BoardPage() {
               >
                 <Home className="w-5 h-5" />
                 <span className="hidden sm:inline">Home</span>
+              </button>
+              
+              <button
+                onClick={() => navigate('/about')}
+                className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition"
+              >
+                <Info className="w-5 h-5" />
+                <span className="hidden sm:inline">About</span>
               </button>
               
               <div className="h-6 w-px bg-gray-300 hidden sm:block" />
@@ -459,7 +468,7 @@ export default function BoardPage() {
       {viewMode === 'grid' && <FilterToolbar allTags={allTags} />}
 
       {/* Notes View */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="flex-1 max-w-7xl mx-auto px-4 py-8 w-full">
         {notes.length === 0 && filteredNotes.length === 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <button
@@ -516,6 +525,8 @@ export default function BoardPage() {
           </DndContext>
         )}
       </div>
+      
+      <Footer />
     </div>
   )
 }

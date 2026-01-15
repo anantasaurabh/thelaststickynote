@@ -2,9 +2,10 @@ import { useNavigate } from 'react-router-dom'
 import { nanoid } from 'nanoid'
 import { supabase } from '@/lib/supabase'
 import { getRecentBoards, removeRecentBoard } from '@/lib/localStorage'
-import { StickyNote, Trash2 } from 'lucide-react'
+import { StickyNote, Trash2, Info } from 'lucide-react'
 import { useState } from 'react'
 import type { Database } from '@/types/database'
+import Footer from '@/components/Footer'
 
 export default function LandingPage() {
   const navigate = useNavigate()
@@ -38,20 +39,32 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-4">
-            <StickyNote className="w-16 h-16 text-amber-400" />
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 flex flex-col">
+      {/* Top Navigation */}
+      <div className="absolute top-4 right-4 z-10">
+        <button
+          onClick={() => navigate('/about')}
+          className="flex items-center gap-2 bg-white/80 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-purple-600 px-4 py-2 rounded-full shadow-md transition font-medium"
+        >
+          <Info className="w-4 h-4" />
+          <span>About</span>
+        </button>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center mb-4">
+              <StickyNote className="w-16 h-16 text-amber-400" />
+            </div>
+            <h1 className="text-5xl font-bold text-gray-800 mb-4">
+              The Last Sticky Note
+            </h1>
+            <p className="text-xl text-gray-600">
+              No Login. No Signup. Just Create and Share.
+            </p>
           </div>
-          <h1 className="text-5xl font-bold text-gray-800 mb-4">
-            The Last Sticky Note
-          </h1>
-          <p className="text-xl text-gray-600">
-            No Login. No Signup. Just Create and Share.
-          </p>
-        </div>
 
         {/* Create Board Button */}
         <div className="text-center mb-12">
@@ -120,7 +133,10 @@ export default function LandingPage() {
             💡 <strong>Tip:</strong> Use the Export feature to backup your notes as JSON files.
           </p>
         
+        </div>
       </div>
+      
+      <Footer />
     </div>
   )
 }
