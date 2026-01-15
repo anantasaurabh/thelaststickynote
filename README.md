@@ -9,6 +9,7 @@ A no-friction collaborative sticky note tool. Create a board instantly, share th
 - 🎨 12 pastel color options
 - ✅ Todo lists within notes
 - 🏷️ Tag system
+- 📋 Kanban board view with status columns (New, Todo, Ongoing, Closed)
 - 🎯 Drag and drop reordering
 - 🔍 Client-side filtering
 
