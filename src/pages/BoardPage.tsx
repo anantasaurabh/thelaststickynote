@@ -7,6 +7,7 @@ import type { NoteStatus } from '@/types/database'
 import StickyNote from '@/components/StickyNote'
 import FilterToolbar from '@/components/FilterToolbar'
 import KanbanView from '@/components/KanbanView'
+import NoteDetailsPanel from '@/components/NoteDetailsPanel'
 import { useFilterStore } from '@/store/filterStore'
 import { Plus, Home, Copy, Check, Download, Upload, LayoutGrid, Columns, Info } from 'lucide-react'
 import Footer from '@/components/Footer'
@@ -37,6 +38,8 @@ export default function BoardPage() {
   const [editName, setEditName] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'kanban'>('grid')
   const { selectedColor, selectedTag } = useFilterStore()
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null)
+  const [showSidePanel, setShowSidePanel] = useState(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -75,6 +78,16 @@ export default function BoardPage() {
       subscription.unsubscribe()
     }
   }, [id])
+
+  // Sync selected note with notes array updates
+  useEffect(() => {
+    if (selectedNote && showSidePanel) {
+      const updatedNote = notes.find(n => n.id === selectedNote.id)
+      if (updatedNote) {
+        setSelectedNote(updatedNote)
+      }
+    }
+  }, [notes, showSidePanel])
 
   const loadBoard = async () => {
     if (!id) return
@@ -156,6 +169,12 @@ export default function BoardPage() {
 
   const deleteNote = async (noteId: string) => {
     try {
+      // Close side panel if the deleted note is currently shown
+      if (selectedNote?.id === noteId) {
+        setShowSidePanel(false)
+        setSelectedNote(null)
+      }
+
       // Optimistically update UI
       setNotes(prevNotes => prevNotes.filter(note => note.id !== noteId))
 
@@ -244,6 +263,24 @@ export default function BoardPage() {
       console.error('Error updating positions:', error)
       loadNotes() // Reload on error
     }
+  }
+
+  const handleOpenPanel = (note: Note) => {
+    setSelectedNote(note)
+    setShowSidePanel(true)
+  }
+
+  const handleSwitchCard = (note: Note) => {
+    setSelectedNote(note)
+  }
+
+  const handleCloseSidePanel = () => {
+    setShowSidePanel(false)
+    setSelectedNote(null)
+  }
+
+  const handleUpdateFromPanel = (noteId: string, updates: Partial<Note>) => {
+    updateNote(noteId, updates)
   }
 
   const copyBoardUrl = () => {
@@ -496,6 +533,9 @@ export default function BoardPage() {
                 onUpdate={updateNote}
                 onDelete={deleteNote}
                 onAddNote={addNote}
+                onOpenPanel={handleOpenPanel}
+                onSwitchCard={handleSwitchCard}
+                isPanelOpen={showSidePanel}
               />
             ) : (
               <SortableContext
@@ -509,6 +549,9 @@ export default function BoardPage() {
                       note={note}
                       onUpdate={updateNote}
                       onDelete={deleteNote}
+                      onOpenPanel={handleOpenPanel}
+                      onSwitchCard={handleSwitchCard}
+                      isPanelOpen={showSidePanel}
                     />
                   ))}
                   
@@ -529,6 +572,15 @@ export default function BoardPage() {
         )}
       </div>
       
+      {/* Side Panel */}
+      {showSidePanel && selectedNote && (
+        <NoteDetailsPanel
+          note={selectedNote}
+          onClose={handleCloseSidePanel}
+          onUpdate={handleUpdateFromPanel}
+        />
+      )}
+
       <Footer />
     </div>
   )

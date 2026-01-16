@@ -10,6 +10,9 @@ interface KanbanViewProps {
   onUpdate: (noteId: string, updates: Partial<Note>) => void
   onDelete: (noteId: string) => void
   onAddNote: () => void
+  onOpenPanel?: (note: Note) => void
+  onSwitchCard?: (note: Note) => void
+  isPanelOpen?: boolean
 }
 
 function KanbanColumn({ 
@@ -18,7 +21,10 @@ function KanbanColumn({
   notes, 
   onUpdate, 
   onDelete,
-  onAddNote
+  onAddNote,
+  onOpenPanel,
+  onSwitchCard,
+  isPanelOpen
 }: { 
   status: NoteStatus
   label: string
@@ -26,6 +32,9 @@ function KanbanColumn({
   onUpdate: (noteId: string, updates: Partial<Note>) => void
   onDelete: (noteId: string) => void
   onAddNote?: () => void
+  onOpenPanel?: (note: Note) => void
+  onSwitchCard?: (note: Note) => void
+  isPanelOpen?: boolean
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `column-${status}`,
@@ -60,6 +69,9 @@ function KanbanColumn({
                 note={note}
                 onUpdate={onUpdate}
                 onDelete={onDelete}
+                onOpenPanel={onOpenPanel}
+                onSwitchCard={onSwitchCard}
+                isPanelOpen={isPanelOpen}
               />
             ))}
             
@@ -82,7 +94,7 @@ function KanbanColumn({
   )
 }
 
-export default function KanbanView({ notes, onUpdate, onDelete, onAddNote }: KanbanViewProps) {
+export default function KanbanView({ notes, onUpdate, onDelete, onAddNote, onOpenPanel, onSwitchCard, isPanelOpen }: KanbanViewProps) {
   return (
     <div className="flex gap-4 overflow-x-auto pb-4">
       {NOTE_STATUSES.map(({ value, label }) => (
@@ -94,6 +106,9 @@ export default function KanbanView({ notes, onUpdate, onDelete, onAddNote }: Kan
           onUpdate={onUpdate}
           onDelete={onDelete}
           onAddNote={value === 'new' ? onAddNote : undefined}
+          onOpenPanel={onOpenPanel}
+          onSwitchCard={onSwitchCard}
+          isPanelOpen={isPanelOpen}
         />
       ))}
     </div>

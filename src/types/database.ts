@@ -6,16 +6,19 @@ export interface Database {
           id: string
           name: string
           created_at: string
+          updated_at: string
         }
         Insert: {
           id: string
           name?: string
           created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
           name?: string
           created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -32,6 +35,7 @@ export interface Database {
           position: number
           status: string
           created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
@@ -45,6 +49,7 @@ export interface Database {
           position?: number
           status?: string
           created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
@@ -58,6 +63,7 @@ export interface Database {
           position?: number
           status?: string
           created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -95,6 +101,7 @@ export interface Note {
   position: number
   status: string
   created_at: string
+  updated_at: string
 }
 
 export type NoteStatus = 'new' | 'todo' | 'ongoing' | 'closed'

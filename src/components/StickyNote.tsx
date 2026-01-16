@@ -2,23 +2,24 @@ import { useState } from 'react'
 import type { Note, TodoItem } from '@/types/database'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Trash2, GripVertical, Edit2, X, Check } from 'lucide-react'
+import { Trash2, GripVertical, Edit2, X, Check, Maximize2 } from 'lucide-react'
 import ColorPicker from './ColorPicker'
 import TagInput from './TagInput'
 import TodoList from './TodoList'
-import NoteDetailsModal from './NoteDetailsModal'
 
 interface StickyNoteProps {
   note: Note
   onUpdate: (noteId: string, updates: Partial<Note>) => void
   onDelete: (noteId: string) => void
+  onOpenPanel?: (note: Note) => void
+  onSwitchCard?: (note: Note) => void
+  isPanelOpen?: boolean
 }
 
-export default function StickyNote({ note, onUpdate, onDelete }: StickyNoteProps) {
+export default function StickyNote({ note, onUpdate, onDelete, onOpenPanel, onSwitchCard, isPanelOpen }: StickyNoteProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(note.title)
   const [editShortDesc, setEditShortDesc] = useState(note.short_desc)
-  const [showDetails, setShowDetails] = useState(false)
 
   const {
     attributes,
@@ -61,8 +62,21 @@ export default function StickyNote({ note, onUpdate, onDelete }: StickyNoteProps
     onUpdate(note.id, { todos })
   }
 
-  const handleLongDescChange = (longDesc: string) => {
-    onUpdate(note.id, { long_desc: longDesc })
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't do anything if clicking on interactive elements
+    const target = e.target as HTMLElement
+    if (
+      target.closest('button') ||
+      target.closest('input') ||
+      target.closest('textarea') ||
+      isEditing
+    ) {
+      return
+    }
+    // Only switch cards if panel is already open
+    if (isPanelOpen && onSwitchCard) {
+      onSwitchCard(note)
+    }
   }
 
   return (
@@ -70,7 +84,8 @@ export default function StickyNote({ note, onUpdate, onDelete }: StickyNoteProps
       <div
         ref={setNodeRef}
         style={style}
-        className={`${note.color} rounded-lg shadow-md p-4 relative group hover:shadow-lg transition-shadow`}
+        onClick={handleCardClick}
+        className={`${note.color} rounded-lg shadow-md p-4 relative group hover:shadow-lg transition-shadow cursor-pointer`}
       >
         {/* Drag Handle */}
         <div
@@ -100,6 +115,13 @@ export default function StickyNote({ note, onUpdate, onDelete }: StickyNoteProps
             </>
           ) : (
             <>
+              <button
+                onClick={() => onOpenPanel?.(note)}
+                className="p-1 bg-purple-500 text-white rounded hover:bg-purple-600"
+                title="View all details"
+              >
+                <Maximize2 className="w-4 h-4" />
+              </button>
               <button
                 onClick={() => setIsEditing(true)}
                 className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -157,10 +179,10 @@ export default function StickyNote({ note, onUpdate, onDelete }: StickyNoteProps
             </>
           )}
 
-          {/* Long Description Link */}
+          {/* View Details Link */}
           {note.long_desc && (
             <button
-              onClick={() => setShowDetails(true)}
+              onClick={() => onOpenPanel?.(note)}
               className="text-xs text-blue-600 hover:underline"
             >
               View Details
@@ -182,15 +204,6 @@ export default function StickyNote({ note, onUpdate, onDelete }: StickyNoteProps
           />
         </div>
       </div>
-
-      {/* Details Modal */}
-      {showDetails && (
-        <NoteDetailsModal
-          note={note}
-          onClose={() => setShowDetails(false)}
-          onUpdate={handleLongDescChange}
-        />
-      )}
     </>
   )
 }

@@ -70,7 +70,8 @@ create extension if not exists "uuid-ossp";
 create table public.boards (
   id text primary key,
   name text default 'Untitled Board',
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 -- 3. Create the NOTES table
@@ -85,17 +86,38 @@ create table public.notes (
   todos jsonb default '[]'::jsonb,
   position integer default 0,
   status text default 'new',
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 4. Create an Index for speed
+-- 4. Create function to automatically update updated_at timestamp
+create or replace function update_updated_at_column()
+returns trigger as $$
+begin
+    new.updated_at = timezone('utc'::text, now());
+    return new;
+end;
+$$ language 'plpgsql';
+
+-- 5. Create triggers for automatic updated_at updates
+create trigger update_boards_updated_at 
+    before update on public.boards 
+    for each row 
+    execute function update_updated_at_column();
+
+create trigger update_notes_updated_at 
+    before update on public.notes 
+    for each row 
+    execute function update_updated_at_column();
+
+-- 6. Create an Index for speed
 create index notes_board_id_idx on public.notes(board_id);
 
--- 5. Enable Realtime
+-- 7. Enable Realtime
 alter publication supabase_realtime add table public.boards;
 alter publication supabase_realtime add table public.notes;
 
--- 6. Enable Row Level Security
+-- 8. Enable Row Level Security
 alter table public.boards enable row level security;
 alter table public.notes enable row level security;
 
@@ -105,6 +127,45 @@ on public.boards for all using (true) with check (true);
 
 create policy "Enable public access to notes"
 on public.notes for all using (true) with check (true);
+```
+
+### 3a. Migration for Existing Databases
+
+If you already have the tables created, run this migration SQL to add the `updated_at` fields:
+
+```sql
+-- Add updated_at column to boards table
+ALTER TABLE public.boards 
+ADD COLUMN updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL;
+
+-- Add updated_at column to notes table
+ALTER TABLE public.notes 
+ADD COLUMN updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL;
+
+-- Create function to automatically update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = timezone('utc'::text, now());
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Create trigger for boards table
+CREATE TRIGGER update_boards_updated_at 
+    BEFORE UPDATE ON public.boards 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Create trigger for notes table
+CREATE TRIGGER update_notes_updated_at 
+    BEFORE UPDATE ON public.notes 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Backfill existing records (set updated_at to created_at for existing rows)
+UPDATE public.boards SET updated_at = created_at WHERE updated_at IS NULL;
+UPDATE public.notes SET updated_at = created_at WHERE updated_at IS NULL;
 ```
 
 ### 4. Run the Development Server
