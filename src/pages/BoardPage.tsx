@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
-import { addRecentBoard } from '@/lib/localStorage'
-import type { Note, Database } from '@/types/database'
+import { addRecentBoard, getRecentBoards } from '@/lib/localStorage'
+import type { Note, Database, RecentBoard } from '@/types/database'
 import type { NoteStatus } from '@/types/database'
 import StickyNote from '@/components/StickyNote'
 import FilterToolbar from '@/components/FilterToolbar'
 import KanbanView from '@/components/KanbanView'
 import NoteDetailsPanel from '@/components/NoteDetailsPanel'
 import { useFilterStore } from '@/store/filterStore'
-import { Plus, Home, Copy, Check, Download, Upload, LayoutGrid, Columns, Info } from 'lucide-react'
+import { Plus, Home, Copy, Check, Download, Upload, LayoutGrid, Columns, Info, ChevronDown } from 'lucide-react'
 import Footer from '@/components/Footer'
 import {
   DndContext,
@@ -40,6 +40,9 @@ export default function BoardPage() {
   const { selectedColor, selectedTag } = useFilterStore()
   const [selectedNote, setSelectedNote] = useState<Note | null>(null)
   const [showSidePanel, setShowSidePanel] = useState(false)
+  const [showRecentBoards, setShowRecentBoards] = useState(false)
+  const [recentBoards, setRecentBoards] = useState<RecentBoard[]>([])
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -47,6 +50,25 @@ export default function BoardPage() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
+
+  // Load recent boards on mount
+  useEffect(() => {
+    setRecentBoards(getRecentBoards())
+  }, [])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowRecentBoards(false)
+      }
+    }
+
+    if (showRecentBoards) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showRecentBoards])
 
   useEffect(() => {
     if (!id) return
@@ -423,13 +445,56 @@ export default function BoardPage() {
                   autoFocus
                 />
               ) : (
-                <button
-                  onClick={startEditingName}
-                  className="text-sm sm:text-lg font-semibold text-gray-800 hover:text-purple-600 transition px-1 sm:px-2 py-1 rounded hover:bg-purple-50 truncate min-w-0"
-                  title="Click to rename board"
-                >
-                  {boardName}
-                </button>
+                <div className="relative flex items-center gap-1 min-w-0" ref={dropdownRef}>
+                  <button
+                    onClick={startEditingName}
+                    className="text-sm sm:text-lg font-semibold text-gray-800 hover:text-purple-600 transition px-1 sm:px-2 py-1 rounded hover:bg-purple-50 truncate min-w-0"
+                    title="Click to rename board"
+                  >
+                    {boardName}
+                  </button>
+                  <button
+                    onClick={() => setShowRecentBoards(!showRecentBoards)}
+                    className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 p-1 rounded transition flex-shrink-0"
+                    title="Recent boards"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+
+                  {/* Recent Boards Dropdown */}
+                  {showRecentBoards && (
+                    <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50">
+                      <div className="px-3 py-1.5 text-xs font-semibold text-gray-500 uppercase border-b border-gray-100">
+                        Recent Boards
+                      </div>
+                      {recentBoards.length === 0 ? (
+                        <div className="px-3 py-2 text-sm text-gray-500">
+                          No recent boards
+                        </div>
+                      ) : (
+                        recentBoards.map((board) => (
+                          <button
+                            key={board.id}
+                            onClick={() => {
+                              if (board.id !== id) {
+                                navigate(`/board/${board.id}`)
+                              }
+                              setShowRecentBoards(false)
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm hover:bg-purple-50 transition flex items-center justify-between ${
+                              board.id === id ? 'bg-purple-100 text-purple-900 font-medium' : 'text-gray-700'
+                            }`}
+                          >
+                            <span className="truncate flex-1">{board.name}</span>
+                            {board.id === id && (
+                              <span className="text-purple-600 text-xs ml-2 flex-shrink-0">Current</span>
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
 
               <div className="h-6 w-px bg-gray-300 hidden sm:block" />
