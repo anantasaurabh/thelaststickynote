@@ -7,9 +7,10 @@ import type { NoteStatus } from '@/types/database'
 import StickyNote from '@/components/StickyNote'
 import FilterToolbar from '@/components/FilterToolbar'
 import KanbanView from '@/components/KanbanView'
+import DiaryView from '@/components/DiaryView'
 import NoteDetailsPanel from '@/components/NoteDetailsPanel'
 import { useFilterStore } from '@/store/filterStore'
-import { Plus, Home, Copy, Check, Download, Upload, LayoutGrid, Columns, Info, ChevronDown } from 'lucide-react'
+import { Plus, Home, Copy, Check, Download, Upload, LayoutGrid, Columns, Calendar, Info, ChevronDown } from 'lucide-react'
 import Footer from '@/components/Footer'
 import {
   DndContext,
@@ -36,7 +37,7 @@ export default function BoardPage() {
   const [boardName, setBoardName] = useState('Untitled Board')
   const [isEditingName, setIsEditingName] = useState(false)
   const [editName, setEditName] = useState('')
-  const [viewMode, setViewMode] = useState<'grid' | 'kanban'>('grid')
+  const [viewMode, setViewMode] = useState<'grid' | 'kanban' | 'diary'>('grid')
   const { selectedColor, selectedTag } = useFilterStore()
   const [selectedNote, setSelectedNote] = useState<Note | null>(null)
   const [showSidePanel, setShowSidePanel] = useState(false)
@@ -175,6 +176,30 @@ export default function BoardPage() {
     }
   }
 
+  const addNoteWithDate = async (diaryDate: string) => {
+    if (!id) return
+
+    try {
+      const maxPosition = Math.max(...notes.map(n => n.position), -1)
+      
+      const newNote: Database['public']['Tables']['notes']['Insert'] = {
+        board_id: id,
+        title: 'New Note',
+        position: maxPosition + 1,
+        status: 'new',
+        diary_date: diaryDate,
+      }
+      
+      const { error } = await supabase
+        .from('notes')
+        .insert(newNote)
+
+      if (error) throw error
+    } catch (error) {
+      console.error('Error creating note:', error)
+    }
+  }
+
   const updateNote = async (noteId: string, updates: Partial<Note>) => {
     try {
       const noteUpdate: Database['public']['Tables']['notes']['Update'] = updates
@@ -256,6 +281,25 @@ export default function BoardPage() {
       
       // Update status
       await updateNote(noteId, { status: newStatus })
+      return
+    }
+
+    // Check if dropped in diary view
+    if (overId.startsWith('date-')) {
+      const noteId = active.id.toString()
+      const dateStr = overId.replace('date-', '')
+      
+      // Update diary_date
+      await updateNote(noteId, { diary_date: dateStr })
+      return
+    }
+
+    // Check if dropped in unassigned zone
+    if (overId === 'unassigned-zone') {
+      const noteId = active.id.toString()
+      
+      // Clear diary_date
+      await updateNote(noteId, { diary_date: null })
       return
     }
 
@@ -525,6 +569,18 @@ export default function BoardPage() {
                   <Columns className="w-4 h-4" />
                   <span className="hidden md:inline">Kanban</span>
                 </button>
+                <button
+                  onClick={() => setViewMode('diary')}
+                  className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 text-sm transition ${
+                    viewMode === 'diary'
+                      ? 'bg-white text-gray-900 shadow-sm font-semibold'
+                      : 'bg-transparent text-gray-600 hover:text-gray-900'
+                  }`}
+                  title="Diary view"
+                >
+                  <Calendar className="w-4 h-4" />
+                  <span className="hidden md:inline">Diary</span>
+                </button>
               </div>
             </div>
 
@@ -569,11 +625,11 @@ export default function BoardPage() {
         </div>
       </div>
 
-      {/* Filter Toolbar - Only show in grid view */}
-      {viewMode === 'grid' && <FilterToolbar allTags={allTags} />}
+      {/* Filter Toolbar - Show in grid and diary views */}
+      {(viewMode === 'grid' || viewMode === 'diary') && <FilterToolbar allTags={allTags} />}
 
       {/* Notes View */}
-      <div className="flex-1 max-w-7xl mx-auto px-4 py-8 w-full">
+      <div className="flex-1 max-w-7xl mx-auto px-2 py-4 w-full">
         {notes.length === 0 && filteredNotes.length === 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <button
@@ -601,6 +657,12 @@ export default function BoardPage() {
                 onOpenPanel={handleOpenPanel}
                 onSwitchCard={handleSwitchCard}
                 isPanelOpen={showSidePanel}
+              />
+            ) : viewMode === 'diary' ? (
+              <DiaryView
+                notes={filteredNotes}
+                onOpenPanel={handleOpenPanel}
+                onAddNote={addNoteWithDate}
               />
             ) : (
               <SortableContext

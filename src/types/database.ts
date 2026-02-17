@@ -34,6 +34,7 @@ export interface Database {
           todos: TodoItem[]
           position: number
           status: string
+          diary_date: string | null
           created_at: string
           updated_at: string
         }
@@ -48,6 +49,7 @@ export interface Database {
           todos?: TodoItem[]
           position?: number
           status?: string
+          diary_date?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -62,6 +64,7 @@ export interface Database {
           todos?: TodoItem[]
           position?: number
           status?: string
+          diary_date?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -100,6 +103,7 @@ export interface Note {
   todos: TodoItem[]
   position: number
   status: string
+  diary_date: string | null
   created_at: string
   updated_at: string
 }
